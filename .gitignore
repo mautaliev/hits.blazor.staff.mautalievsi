@@ -1,0 +1,27 @@
+# Build artifacts
+**/bin/
+**/obj/
+
+# IDE and tool caches
+**/*.lscache
+.vs/
+.vscode/
+.idea/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.rsuser
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local databases
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# Logs
+*.log
