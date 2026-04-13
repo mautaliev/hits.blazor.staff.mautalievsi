@@ -6,5 +6,7 @@ namespace Staff.Data;
 public class ApplicationUser : IdentityUser
 {
     public Employee? Employee { get; set; }
+
+    public ICollection<ApplicationUserRole> UserRoles { get; set; } = [];
 }
 

@@ -68,8 +68,7 @@ Data/
  ApplicationDbContext.cs
  ApplicationDbContextFactory.cs
  ApplicationUser.cs
- Department.cs
- DepartmentFacade.cs
+ ApplicationUserRole.cs
  Employee.cs
  EmployeeFacade.cs
  Migrations/
@@ -77,11 +76,14 @@ Data/
   00000000000000_CreateIdentitySchema.Designer.cs
   20260413181444_AddPersonnelManagementSchema.cs
   20260413181444_AddPersonnelManagementSchema.Designer.cs
+  20260413185646_RestructurePersonnelSchema.cs
+  20260413185646_RestructurePersonnelSchema.Designer.cs
   ApplicationDbContextModelSnapshot.cs
  Organization.cs
  OrganizationFacade.cs
  Position.cs
  PositionFacade.cs
+ Role.cs
 obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
  EmbeddedAttribute.cs

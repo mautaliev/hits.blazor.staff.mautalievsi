@@ -38,8 +38,7 @@ public class EmployeeFacade(ApplicationDbContext dbContext)
 
         return await dbContext.Employees
             .AsNoTracking()
-            .Include(x => x.Department)
-            .ThenInclude(x => x.Organization)
+            .Include(x => x.Organization)
             .Include(x => x.Position)
             .Include(x => x.User)
             .OrderBy(x => x.LastName)

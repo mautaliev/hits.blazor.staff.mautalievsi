@@ -38,9 +38,9 @@ public class Employee
     [MaxLength(20)]
     public string? PassportDepartmentCode { get; set; }
 
-    public int DepartmentId { get; set; }
+    public int OrganizationId { get; set; }
 
-    public Department Department { get; set; } = null!;
+    public Organization Organization { get; set; } = null!;
 
     public int PositionId { get; set; }
 

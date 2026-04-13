@@ -20,5 +20,5 @@ public class Organization
     [MaxLength(9)]
     public string? Kpp { get; set; }
 
-    public ICollection<Department> Departments { get; set; } = [];
+    public ICollection<Employee> Employees { get; set; } = [];
 }

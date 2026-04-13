@@ -5,10 +5,17 @@ using Microsoft.EntityFrameworkCore;
 namespace Staff.Data;
 
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-    : IdentityDbContext<ApplicationUser, IdentityRole, string>(options)
+    : IdentityDbContext<
+        ApplicationUser,
+        Role,
+        string,
+        IdentityUserClaim<string>,
+        ApplicationUserRole,
+        IdentityUserLogin<string>,
+        IdentityRoleClaim<string>,
+        IdentityUserToken<string>>(options)
 {
     public DbSet<Employee> Employees => Set<Employee>();
-    public DbSet<Department> Departments => Set<Department>();
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<Position> Positions => Set<Position>();
 
@@ -19,14 +26,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         builder.Entity<Organization>(entity =>
         {
             entity.HasIndex(x => x.Inn).IsUnique();
-        });
-
-        builder.Entity<Department>(entity =>
-        {
-            entity.HasOne(x => x.Organization)
-                .WithMany(x => x.Departments)
-                .HasForeignKey(x => x.OrganizationId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<Position>(entity =>
@@ -40,9 +39,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(x => x.Snils).IsUnique();
             entity.HasIndex(x => x.UserId).IsUnique();
 
-            entity.HasOne(x => x.Department)
+            entity.HasOne(x => x.Organization)
                 .WithMany(x => x.Employees)
-                .HasForeignKey(x => x.DepartmentId)
+                .HasForeignKey(x => x.OrganizationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(x => x.Position)
@@ -56,22 +55,35 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        builder.Entity<IdentityRole>().HasData(
-            new IdentityRole
+        builder.Entity<ApplicationUserRole>(entity =>
+        {
+            entity.HasOne(x => x.User)
+                .WithMany(x => x.UserRoles)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(x => x.Role)
+                .WithMany(x => x.UserRoles)
+                .HasForeignKey(x => x.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Role>().HasData(
+            new Role
             {
                 Id = "role-admin",
                 ConcurrencyStamp = "role-admin-stamp",
                 Name = "Админ",
                 NormalizedName = "АДМИН"
             },
-            new IdentityRole
+            new Role
             {
                 Id = "role-hr",
                 ConcurrencyStamp = "role-hr-stamp",
                 Name = "Кадровик",
                 NormalizedName = "КАДРОВИК"
             },
-            new IdentityRole
+            new Role
             {
                 Id = "role-lawyer",
                 ConcurrencyStamp = "role-lawyer-stamp",
