@@ -203,3 +203,4 @@
 /Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/obj/Debug/net10.0/Staff.pdb
 /Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/obj/Debug/net10.0/Staff.genruntimeconfig.cache
 /Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/obj/Debug/net10.0/ref/Staff.dll
+/Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/bin/Debug/net10.0/Data/app.db
