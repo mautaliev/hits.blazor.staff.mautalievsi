@@ -2,7 +2,6 @@
 /Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/bin/Debug/net10.0/appsettings.json
 /Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/bin/Debug/net10.0/Staff.staticwebassets.runtime.json
 /Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/bin/Debug/net10.0/Staff.staticwebassets.endpoints.json
-/Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/bin/Debug/net10.0/Data/app.db
 /Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/bin/Debug/net10.0/Staff
 /Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/bin/Debug/net10.0/Staff.deps.json
 /Users/saidamirmautaliev/Desktop/Вуз/Спирин/hits.blazor.staff.mautalievsi/Staff/bin/Debug/net10.0/Staff.runtimeconfig.json
