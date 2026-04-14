@@ -1,0 +1,119 @@
+@page "/organizations"
+@attribute [Authorize(Roles = AppRoles.ManagementAccess)]
+@rendermode InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject OrganizationFacade OrganizationFacade
+
+<PageTitle>Организации</PageTitle>
+
+<h1>Организации</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
+    <p class="mb-0 text-muted">Список организаций системы.</p>
+    @if (canEditOrganizations)
+    {
+        <a class="btn btn-primary" href="/organizations/new">Создать организацию</a>
+    }
+</div>
+
+@if (organizations is null)
+{
+    <p><em>Загрузка...</em></p>
+}
+else if (organizations.Count == 0)
+{
+    <div class="alert alert-info">Организаций пока нет.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>ИНН</th>
+                    <th>КПП</th>
+                    <th>Сотрудники</th>
+                    @if (canEditOrganizations)
+                    {
+                        <th class="text-end">Действия</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var organization in organizations)
+                {
+                    <tr>
+                        <td><a href="@($"/organizations/{organization.Id}")">@organization.Name</a></td>
+                        <td>@organization.Inn</td>
+                        <td>@(string.IsNullOrWhiteSpace(organization.Kpp) ? "—" : organization.Kpp)</td>
+                        <td>@organization.Employees.Count</td>
+                        @if (canEditOrganizations)
+                        {
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a class="btn btn-sm btn-outline-secondary" href="@($"/organizations/{organization.Id}/edit")">Изменить</a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => deleteCandidateId = organization.Id">Удалить</button>
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (deleteCandidateId.HasValue)
+{
+    <div class="alert alert-warning mt-3">
+        <p class="mb-3">Подтвердите удаление организации.</p>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-danger" @onclick="DeleteAsync">Подтвердить удаление</button>
+            <button type="button" class="btn btn-outline-secondary" @onclick="() => deleteCandidateId = null">Отмена</button>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Organization>? organizations;
+    private bool canEditOrganizations;
+    private int? deleteCandidateId;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        canEditOrganizations = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Lawyer);
+        organizations = await OrganizationFacade.GetAllAsync();
+    }
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
+    private async Task DeleteAsync()
+    {
+        if (!deleteCandidateId.HasValue)
+        {
+            return;
+        }
+
+        try
+        {
+            await OrganizationFacade.DeleteAsync(deleteCandidateId.Value);
+            deleteCandidateId = null;
+            organizations = await OrganizationFacade.GetAllAsync();
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

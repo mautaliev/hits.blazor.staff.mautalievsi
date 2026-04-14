@@ -4,6 +4,32 @@ namespace Staff.Data;
 
 public class EmployeeFacade(ApplicationDbContext dbContext)
 {
+    public async Task<Employee?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Employees
+            .AsNoTracking()
+            .Include(x => x.Organization)
+            .Include(x => x.Position)
+            .Include(x => x.User)
+            .ThenInclude(x => x.UserRoles)
+            .ThenInclude(x => x.Role)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public async Task<List<Employee>> GetByOrganizationIdAsync(int organizationId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Employees
+            .AsNoTracking()
+            .Include(x => x.Organization)
+            .Include(x => x.Position)
+            .Include(x => x.User)
+            .Where(x => x.OrganizationId == organizationId)
+            .OrderBy(x => x.LastName)
+            .ThenBy(x => x.FirstName)
+            .ThenBy(x => x.MiddleName)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Employee> CreateAsync(Employee employee, CancellationToken cancellationToken = default)
     {
         dbContext.Employees.Add(employee);

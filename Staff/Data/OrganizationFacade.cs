@@ -4,6 +4,15 @@ namespace Staff.Data;
 
 public class OrganizationFacade(ApplicationDbContext dbContext)
 {
+    public async Task<Organization?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Organizations
+            .AsNoTracking()
+            .Include(x => x.Employees.OrderBy(e => e.LastName).ThenBy(e => e.FirstName).ThenBy(e => e.MiddleName))
+            .ThenInclude(x => x.Position)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
     public async Task<Organization> CreateAsync(Organization organization, CancellationToken cancellationToken = default)
     {
         dbContext.Organizations.Add(organization);
@@ -38,6 +47,7 @@ public class OrganizationFacade(ApplicationDbContext dbContext)
 
         return await dbContext.Organizations
             .AsNoTracking()
+            .Include(x => x.Employees)
             .OrderBy(x => x.Name)
             .ToListAsync(cancellationToken);
     }

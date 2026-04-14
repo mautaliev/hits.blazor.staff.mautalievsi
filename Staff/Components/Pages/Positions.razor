@@ -1,0 +1,116 @@
+@page "/positions"
+@attribute [Authorize(Roles = AppRoles.ManagementAccess)]
+@rendermode InteractiveServer
+
+@inject PositionFacade PositionFacade
+
+<PageTitle>Должности</PageTitle>
+
+<h1>Должности</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
+    <p class="mb-0 text-muted">Список должностей системы.</p>
+    @if (canEditPositions)
+    {
+        <a class="btn btn-primary" href="/positions/new">Создать должность</a>
+    }
+</div>
+
+@if (positions is null)
+{
+    <p><em>Загрузка...</em></p>
+}
+else if (positions.Count == 0)
+{
+    <div class="alert alert-info">Должности пока не добавлены.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Зарплата</th>
+                    <th>Сотрудники</th>
+                    @if (canEditPositions)
+                    {
+                        <th class="text-end">Действия</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var position in positions)
+                {
+                    <tr>
+                        <td><a href="@($"/positions/{position.Id}")">@position.Name</a></td>
+                        <td>@(position.Salary.HasValue ? position.Salary.Value.ToString("N2") : "—")</td>
+                        <td>@position.Employees.Count</td>
+                        @if (canEditPositions)
+                        {
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <a class="btn btn-sm btn-outline-secondary" href="@($"/positions/{position.Id}/edit")">Изменить</a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => deleteCandidateId = position.Id">Удалить</button>
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@if (deleteCandidateId.HasValue)
+{
+    <div class="alert alert-warning mt-3">
+        <p class="mb-3">Подтвердите удаление должности.</p>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-danger" @onclick="DeleteAsync">Подтвердить удаление</button>
+            <button type="button" class="btn btn-outline-secondary" @onclick="() => deleteCandidateId = null">Отмена</button>
+        </div>
+    </div>
+}
+
+@code {
+    private List<Position>? positions;
+    private bool canEditPositions;
+    private int? deleteCandidateId;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        canEditPositions = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Hr);
+        positions = await PositionFacade.GetAllAsync();
+    }
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
+    private async Task DeleteAsync()
+    {
+        if (!deleteCandidateId.HasValue)
+        {
+            return;
+        }
+
+        try
+        {
+            await PositionFacade.DeleteAsync(deleteCandidateId.Value);
+            deleteCandidateId = null;
+            positions = await PositionFacade.GetAllAsync();
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

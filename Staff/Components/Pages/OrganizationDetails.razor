@@ -1,0 +1,137 @@
+@page "/organizations/{Id:int}"
+@attribute [Authorize(Roles = AppRoles.ManagementAccess)]
+@rendermode InteractiveServer
+
+@inject NavigationManager NavigationManager
+@inject OrganizationFacade OrganizationFacade
+
+<PageTitle>Карточка организации</PageTitle>
+
+@if (organization is null)
+{
+    <p><em>Загрузка...</em></p>
+}
+else
+{
+    <h1>@organization.Name</h1>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Название</dt>
+                <dd class="col-sm-9">@organization.Name</dd>
+
+                <dt class="col-sm-3">Описание</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(organization.Description) ? "—" : organization.Description)</dd>
+
+                <dt class="col-sm-3">ИНН</dt>
+                <dd class="col-sm-9">@organization.Inn</dd>
+
+                <dt class="col-sm-3">КПП</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(organization.Kpp) ? "—" : organization.Kpp)</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
+        <h2 class="h4 mb-0">Сотрудники</h2>
+        <div class="d-flex gap-2 flex-wrap">
+            @if (canEditOrganizations)
+            {
+                <a class="btn btn-outline-secondary" href="@($"/organizations/{organization.Id}/edit")">Изменить</a>
+            }
+            @if (canManageEmployees)
+            {
+                <a class="btn btn-primary" href="@($"/organizations/{organization.Id}/employees/new")">Добавить сотрудника</a>
+            }
+        </div>
+    </div>
+
+    @if (organization.Employees.Count == 0)
+    {
+        <div class="alert alert-info">В организации пока нет сотрудников.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>ФИО</th>
+                        <th>Должность</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var employee in organization.Employees)
+                    {
+                        <tr>
+                            <td><a href="@($"/employees/{employee.Id}")">@employee.LastName @employee.FirstName @employee.MiddleName</a></td>
+                            <td>@employee.Position.Name</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (canEditOrganizations)
+    {
+        <div class="mt-4">
+            @if (!confirmDelete)
+            {
+                <button type="button" class="btn btn-outline-danger" @onclick="() => confirmDelete = true">Удалить организацию</button>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <p class="mb-3">Подтвердите удаление организации.</p>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-danger" @onclick="DeleteAsync">Подтвердить удаление</button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="() => confirmDelete = false">Отмена</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Organization? organization;
+    private bool canEditOrganizations;
+    private bool canManageEmployees;
+    private bool confirmDelete;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        canEditOrganizations = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Lawyer);
+        canManageEmployees = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Hr);
+        organization = await OrganizationFacade.GetByIdAsync(Id);
+    }
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
+    private async Task DeleteAsync()
+    {
+        try
+        {
+            await OrganizationFacade.DeleteAsync(Id);
+            NavigationManager.NavigateTo("/organizations");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            confirmDelete = false;
+        }
+    }
+}

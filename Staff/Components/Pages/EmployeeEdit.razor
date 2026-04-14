@@ -1,0 +1,232 @@
+@page "/organizations/{OrganizationId:int}/employees/new"
+@page "/employees/{Id:int}/edit"
+@attribute [Authorize(Roles = AppRoles.EmployeeEditors)]
+@rendermode InteractiveServer
+
+@inject EmployeeFacade EmployeeFacade
+@inject EmployeeManagementService EmployeeManagementService
+@inject NavigationManager NavigationManager
+@inject PositionFacade PositionFacade
+@inject OrganizationFacade OrganizationFacade
+
+<PageTitle>@pageTitle</PageTitle>
+
+<h1>@pageTitle</h1>
+
+@if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+@if (!isLoaded)
+{
+    <p><em>Загрузка...</em></p>
+}
+else
+{
+    <EditForm Model="model" OnValidSubmit="SaveAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label" for="lastName">Фамилия</label>
+                <InputText id="lastName" class="form-control" @bind-Value="model.LastName" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="firstName">Имя</label>
+                <InputText id="firstName" class="form-control" @bind-Value="model.FirstName" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label" for="middleName">Отчество</label>
+                <InputText id="middleName" class="form-control" @bind-Value="model.MiddleName" />
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label" for="login">Логин (email)</label>
+                <InputText id="login" class="form-control" @bind-Value="model.Login" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="password">@passwordLabel</label>
+                <InputText id="password" type="password" class="form-control" @bind-Value="model.Password" />
+            </div>
+
+            @if (canManageRoles)
+            {
+                <div class="col-md-6">
+                    <label class="form-label" for="role">Роль</label>
+                    <InputSelect id="role" class="form-select" @bind-Value="model.RoleName">
+                        <option value="">Без роли</option>
+                        @foreach (var role in availableRoles)
+                        {
+                            <option value="@role">@role</option>
+                        }
+                    </InputSelect>
+                </div>
+            }
+
+            <div class="col-md-6">
+                <label class="form-label" for="organization">Организация</label>
+                <InputSelect id="organization" class="form-select" @bind-Value="model.OrganizationId">
+                    @foreach (var organization in organizations)
+                    {
+                        <option value="@organization.Id">@organization.Name</option>
+                    }
+                </InputSelect>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="position">Должность</label>
+                <InputSelect id="position" class="form-select" @bind-Value="model.PositionId">
+                    @foreach (var position in positions)
+                    {
+                        <option value="@position.Id">@position.Name</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label" for="inn">ИНН</label>
+                <InputText id="inn" class="form-control" @bind-Value="model.Inn" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="snils">СНИЛС</label>
+                <InputText id="snils" class="form-control" @bind-Value="model.Snils" />
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label" for="passportSeries">Серия паспорта</label>
+                <InputText id="passportSeries" class="form-control" @bind-Value="model.PassportSeries" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="passportNumber">Номер паспорта</label>
+                <InputText id="passportNumber" class="form-control" @bind-Value="model.PassportNumber" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="passportDate">Дата выдачи</label>
+                <InputDate id="passportDate" class="form-control" @bind-Value="model.PassportIssuedDate" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="passportCode">Код подразделения</label>
+                <InputText id="passportCode" class="form-control" @bind-Value="model.PassportDepartmentCode" />
+            </div>
+            <div class="col-12">
+                <label class="form-label" for="passportIssuedBy">Кем выдан паспорт</label>
+                <InputText id="passportIssuedBy" class="form-control" @bind-Value="model.PassportIssuedBy" />
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a class="btn btn-outline-secondary" href="@cancelUrl">Отмена</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public int? Id { get; set; }
+
+    [Parameter]
+    public int? OrganizationId { get; set; }
+
+    private EmployeeUpsertModel model = new();
+    private List<Organization> organizations = [];
+    private List<Position> positions = [];
+    private List<string> availableRoles = [AppRoles.Admin, AppRoles.Hr, AppRoles.Lawyer];
+    private string? errorMessage;
+    private string pageTitle = "Создание сотрудника";
+    private string passwordLabel = "Пароль";
+    private string cancelUrl = "/";
+    private bool isLoaded;
+    private bool canManageRoles;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        canManageRoles = user.IsInRole(AppRoles.Admin);
+
+        organizations = await OrganizationFacade.GetAllAsync();
+        positions = await PositionFacade.GetAllAsync();
+
+        if (!Id.HasValue)
+        {
+            pageTitle = "Создание сотрудника";
+            passwordLabel = "Пароль";
+            cancelUrl = OrganizationId.HasValue ? $"/organizations/{OrganizationId.Value}" : "/";
+
+            model = new EmployeeUpsertModel
+            {
+                OrganizationId = OrganizationId ?? organizations.FirstOrDefault()?.Id ?? 0,
+                PositionId = positions.FirstOrDefault()?.Id ?? 0
+            };
+
+            isLoaded = true;
+            return;
+        }
+
+        var employee = await EmployeeFacade.GetByIdAsync(Id.Value);
+        if (employee is null)
+        {
+            NavigationManager.NavigateTo("/");
+            return;
+        }
+
+        pageTitle = "Редактирование сотрудника";
+        passwordLabel = "Новый пароль";
+        cancelUrl = $"/employees/{employee.Id}";
+        model = new EmployeeUpsertModel
+        {
+            LastName = employee.LastName,
+            FirstName = employee.FirstName,
+            MiddleName = employee.MiddleName,
+            Login = employee.User.Email ?? employee.User.UserName ?? string.Empty,
+            Inn = employee.Inn,
+            Snils = employee.Snils,
+            PassportSeries = employee.PassportSeries,
+            PassportNumber = employee.PassportNumber,
+            PassportIssuedBy = employee.PassportIssuedBy,
+            PassportIssuedDate = employee.PassportIssuedDate,
+            PassportDepartmentCode = employee.PassportDepartmentCode,
+            OrganizationId = employee.OrganizationId,
+            PositionId = employee.PositionId,
+            RoleName = employee.User.UserRoles.Select(x => x.Role.Name).FirstOrDefault()
+        };
+
+        isLoaded = true;
+    }
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            if (!Id.HasValue && string.IsNullOrWhiteSpace(model.Password))
+            {
+                errorMessage = "Укажите пароль для нового сотрудника.";
+                return;
+            }
+
+            if (!canManageRoles)
+            {
+                model.RoleName = null;
+            }
+
+            if (Id.HasValue)
+            {
+                await EmployeeManagementService.UpdateAsync(Id.Value, model);
+                NavigationManager.NavigateTo($"/employees/{Id.Value}");
+            }
+            else
+            {
+                var employee = await EmployeeManagementService.CreateAsync(model);
+                NavigationManager.NavigateTo($"/employees/{employee.Id}");
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+}

@@ -1,0 +1,133 @@
+@page "/employees/{Id:int}"
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+@inject EmployeeFacade EmployeeFacade
+@inject EmployeeManagementService EmployeeManagementService
+@inject NavigationManager NavigationManager
+
+<PageTitle>Карточка сотрудника</PageTitle>
+
+@if (employee is null)
+{
+    <p><em>Загрузка...</em></p>
+}
+else
+{
+    <h1>@employee.LastName @employee.FirstName @employee.MiddleName</h1>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <dl class="row mb-0">
+                <dt class="col-sm-3">Фамилия</dt>
+                <dd class="col-sm-9">@employee.LastName</dd>
+
+                <dt class="col-sm-3">Имя</dt>
+                <dd class="col-sm-9">@employee.FirstName</dd>
+
+                <dt class="col-sm-3">Отчество</dt>
+                <dd class="col-sm-9">@employee.MiddleName</dd>
+
+                <dt class="col-sm-3">ИНН</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(employee.Inn) ? "—" : employee.Inn)</dd>
+
+                <dt class="col-sm-3">СНИЛС</dt>
+                <dd class="col-sm-9">@(string.IsNullOrWhiteSpace(employee.Snils) ? "—" : employee.Snils)</dd>
+
+                <dt class="col-sm-3">Паспорт</dt>
+                <dd class="col-sm-9">@GetPassportSummary(employee)</dd>
+
+                <dt class="col-sm-3">Организация</dt>
+                <dd class="col-sm-9"><a href="@($"/organizations/{employee.OrganizationId}")">@employee.Organization.Name</a></dd>
+
+                <dt class="col-sm-3">Должность</dt>
+                <dd class="col-sm-9"><a href="@($"/positions/{employee.PositionId}")">@employee.Position.Name</a></dd>
+
+                <dt class="col-sm-3">Пользователь</dt>
+                <dd class="col-sm-9">@employee.User.Email</dd>
+
+                <dt class="col-sm-3">Роль</dt>
+                <dd class="col-sm-9">@GetRoleName(employee)</dd>
+            </dl>
+        </div>
+    </div>
+
+    @if (canManageEmployees)
+    {
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-secondary" href="@($"/employees/{employee.Id}/edit")">Изменить</a>
+
+            @if (!confirmDelete)
+            {
+                <button type="button" class="btn btn-outline-danger" @onclick="() => confirmDelete = true">Удалить сотрудника</button>
+            }
+            else
+            {
+                <button type="button" class="btn btn-danger" @onclick="DeleteAsync">Подтвердить удаление</button>
+                <button type="button" class="btn btn-outline-secondary" @onclick="() => confirmDelete = false">Отмена</button>
+            }
+        </div>
+    }
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Employee? employee;
+    private bool canManageEmployees;
+    private bool confirmDelete;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        canManageEmployees = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Hr);
+        employee = await EmployeeFacade.GetByIdAsync(Id);
+    }
+
+    [Inject]
+    private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
+
+    private async Task DeleteAsync()
+    {
+        try
+        {
+            await EmployeeManagementService.DeleteAsync(Id);
+            NavigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+            confirmDelete = false;
+        }
+    }
+
+    private static string GetRoleName(Employee employee)
+    {
+        return employee.User.UserRoles
+            .Select(x => x.Role.Name)
+            .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x))
+            ?? "—";
+    }
+
+    private static string GetPassportSummary(Employee employee)
+    {
+        var parts = new[]
+        {
+            string.IsNullOrWhiteSpace(employee.PassportSeries) ? null : $"серия {employee.PassportSeries}",
+            string.IsNullOrWhiteSpace(employee.PassportNumber) ? null : $"номер {employee.PassportNumber}",
+            string.IsNullOrWhiteSpace(employee.PassportIssuedBy) ? null : $"выдан {employee.PassportIssuedBy}",
+            employee.PassportIssuedDate.HasValue ? $"от {employee.PassportIssuedDate:dd.MM.yyyy}" : null,
+            string.IsNullOrWhiteSpace(employee.PassportDepartmentCode) ? null : $"код подразделения {employee.PassportDepartmentCode}"
+        };
+
+        var summary = string.Join(", ", parts.Where(x => x is not null));
+        return string.IsNullOrWhiteSpace(summary) ? "—" : summary;
+    }
+}
