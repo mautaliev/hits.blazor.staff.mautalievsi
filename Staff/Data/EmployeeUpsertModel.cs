@@ -43,8 +43,7 @@ public class EmployeeUpsertModel
     [Range(1, int.MaxValue)]
     public int OrganizationId { get; set; }
 
-    [Range(1, int.MaxValue)]
-    public int PositionId { get; set; }
+    public int? PositionId { get; set; }
 
     public string? RoleName { get; set; }
 }

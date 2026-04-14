@@ -46,7 +46,16 @@ else
                 <dd class="col-sm-9"><a href="@($"/organizations/{employee.OrganizationId}")">@employee.Organization.Name</a></dd>
 
                 <dt class="col-sm-3">Должность</dt>
-                <dd class="col-sm-9"><a href="@($"/positions/{employee.PositionId}")">@employee.Position.Name</a></dd>
+                <dd class="col-sm-9">
+                    @if (employee.PositionId.HasValue && employee.Position is not null)
+                    {
+                        <a href="@($"/positions/{employee.PositionId.Value}")">@employee.Position.Name</a>
+                    }
+                    else
+                    {
+                        <span>—</span>
+                    }
+                </dd>
 
                 <dt class="col-sm-3">Роль</dt>
                 <dd class="col-sm-9">@GetRoleName(employee)</dd>

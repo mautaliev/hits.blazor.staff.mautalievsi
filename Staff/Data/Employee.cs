@@ -42,9 +42,9 @@ public class Employee
 
     public Organization Organization { get; set; } = null!;
 
-    public int PositionId { get; set; }
+    public int? PositionId { get; set; }
 
-    public Position Position { get; set; } = null!;
+    public Position? Position { get; set; }
 
     [Required]
     public string UserId { get; set; } = string.Empty;

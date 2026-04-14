@@ -71,7 +71,7 @@ else
                     {
                         <tr>
                             <td><a href="@($"/employees/{employee.Id}")">@employee.LastName @employee.FirstName @employee.MiddleName</a></td>
-                            <td>@employee.Position.Name</td>
+                            <td>@(employee.Position?.Name ?? "—")</td>
                         </tr>
                     }
                 </tbody>

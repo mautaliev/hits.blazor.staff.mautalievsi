@@ -43,7 +43,7 @@ public class EmployeeManagementService(
             PassportIssuedDate = model.PassportIssuedDate,
             PassportDepartmentCode = NullIfEmpty(model.PassportDepartmentCode),
             OrganizationId = model.OrganizationId,
-            PositionId = model.PositionId,
+            PositionId = NormalizePositionId(model.PositionId),
             UserId = user.Id
         };
 
@@ -71,7 +71,7 @@ public class EmployeeManagementService(
         employee.PassportIssuedDate = model.PassportIssuedDate;
         employee.PassportDepartmentCode = NullIfEmpty(model.PassportDepartmentCode);
         employee.OrganizationId = model.OrganizationId;
-        employee.PositionId = model.PositionId;
+        employee.PositionId = NormalizePositionId(model.PositionId);
 
         var login = ResolveLogin(model, employee.User.Email ?? employee.User.UserName ?? string.Empty);
 
@@ -169,5 +169,15 @@ public class EmployeeManagementService(
         }
 
         return GeneratedPassword;
+    }
+
+    private static int? NormalizePositionId(int? positionId)
+    {
+        if (!positionId.HasValue || positionId.Value <= 0)
+        {
+            return null;
+        }
+
+        return positionId.Value;
     }
 }

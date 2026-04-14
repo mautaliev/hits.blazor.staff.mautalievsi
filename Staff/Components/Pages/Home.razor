@@ -51,7 +51,10 @@ else
                         <div class="text-muted">Сотрудники организации</div>
                     </div>
                     <div class="d-flex gap-2 flex-wrap">
-                        <a class="btn btn-outline-secondary" href="@($"/organizations/{selectedOrganization.Id}")">Карточка организации</a>
+                        @if (canOpenOrganizations)
+                        {
+                            <a class="btn btn-outline-secondary" href="@($"/organizations/{selectedOrganization.Id}")">Карточка организации</a>
+                        }
                         @if (canManageEmployees)
                         {
                             <a class="btn btn-primary" href="@($"/organizations/{selectedOrganization.Id}/employees/new")">Добавить сотрудника</a>
@@ -81,8 +84,8 @@ else
                                         <td>
                                             <a href="@($"/employees/{employee.Id}")">@GetFullName(employee)</a>
                                         </td>
-                                        <td>@employee.Position.Name</td>
-                                        <td>@employee.User.Email</td>
+                                        <td>@(employee.Position?.Name ?? "—")</td>
+                                        <td>@GetUserDisplay(employee)</td>
                                     </tr>
                                 }
                             </tbody>
@@ -102,6 +105,7 @@ else
     private List<Employee> employees = [];
     private Organization? selectedOrganization;
     private bool canManageEmployees;
+    private bool canOpenOrganizations;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -119,8 +123,9 @@ else
             employees = [];
         }
 
-        canManageEmployees = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.IsInRole(AppRoles.Admin)
-            || (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User.IsInRole(AppRoles.Hr);
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        canManageEmployees = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Hr);
+        canOpenOrganizations = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Hr) || user.IsInRole(AppRoles.Lawyer);
     }
 
     [Inject]
@@ -128,6 +133,17 @@ else
 
     private static string GetFullName(Employee employee) =>
         $"{employee.LastName} {employee.FirstName} {employee.MiddleName}";
+
+    private static string GetUserDisplay(Employee employee)
+    {
+        var email = employee.User.Email;
+        if (string.IsNullOrWhiteSpace(email) || email.EndsWith("@local", StringComparison.OrdinalIgnoreCase))
+        {
+            return "—";
+        }
+
+        return email;
+    }
 
     private string GetOrganizationUrl(int organizationId) => $"/?organizationId={organizationId}";
 }
