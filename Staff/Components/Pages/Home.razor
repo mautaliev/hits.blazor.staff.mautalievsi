@@ -28,12 +28,9 @@ else
                         var isSelected = organization.Id == selectedOrganization?.Id;
                         <a class="list-group-item list-group-item-action @(isSelected ? "active" : null)"
                            href="@GetOrganizationUrl(organization.Id)">
-                            <div class="d-flex justify-content-between align-items-start gap-3">
-                                <div>
-                                    <div>@organization.Name</div>
-                                    <small class="@(isSelected ? "text-white-50" : "text-muted")">ИНН: @organization.Inn</small>
-                                </div>
-                                <span class="badge text-bg-secondary">@organization.Employees.Count</span>
+                            <div>
+                                <div>@organization.Name</div>
+                                <small class="@(isSelected ? "text-white-50" : "text-muted")">ИНН: @organization.Inn</small>
                             </div>
                         </a>
                     }

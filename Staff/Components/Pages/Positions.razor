@@ -37,7 +37,6 @@ else
                 <tr>
                     <th>Название</th>
                     <th>Зарплата</th>
-                    <th>Сотрудники</th>
                     @if (canEditPositions)
                     {
                         <th class="text-end">Действия</th>
@@ -50,7 +49,6 @@ else
                     <tr>
                         <td><a href="@($"/positions/{position.Id}")">@position.Name</a></td>
                         <td>@(position.Salary.HasValue ? position.Salary.Value.ToString("N2") : "—")</td>
-                        <td>@position.Employees.Count</td>
                         @if (canEditPositions)
                         {
                             <td class="text-end">

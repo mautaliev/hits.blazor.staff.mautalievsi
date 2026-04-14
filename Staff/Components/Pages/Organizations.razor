@@ -39,7 +39,6 @@ else
                     <th>Название</th>
                     <th>ИНН</th>
                     <th>КПП</th>
-                    <th>Сотрудники</th>
                     @if (canEditOrganizations)
                     {
                         <th class="text-end">Действия</th>
@@ -53,7 +52,6 @@ else
                         <td><a href="@($"/organizations/{organization.Id}")">@organization.Name</a></td>
                         <td>@organization.Inn</td>
                         <td>@(string.IsNullOrWhiteSpace(organization.Kpp) ? "—" : organization.Kpp)</td>
-                        <td>@organization.Employees.Count</td>
                         @if (canEditOrganizations)
                         {
                             <td class="text-end">
