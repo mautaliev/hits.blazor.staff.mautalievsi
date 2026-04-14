@@ -207,8 +207,8 @@ public static class AppDemoDataSeeder
                 null),
             new DemoEmployee(
                 "Мауталиев",
-                "Саид",
-                "Ильдарович",
+                "Саидамир",
+                "Ислом угли",
                 "owner.mautaliev@example.com",
                 "667000000001",
                 "11400000001",

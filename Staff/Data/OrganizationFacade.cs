@@ -31,10 +31,18 @@ public class OrganizationFacade(ApplicationDbContext dbContext)
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var organization = await dbContext.Organizations.FindAsync([id], cancellationToken);
+        var organization = await dbContext.Organizations
+            .Include(x => x.Employees)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
         if (organization is null)
         {
             return;
+        }
+
+        if (organization.Employees.Count > 0)
+        {
+            throw new InvalidOperationException("Нельзя удалить организацию, пока в ней есть сотрудники.");
         }
 
         dbContext.Organizations.Remove(organization);

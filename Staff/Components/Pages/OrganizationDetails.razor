@@ -82,20 +82,7 @@ else
     @if (canEditOrganizations)
     {
         <div class="mt-4">
-            @if (!confirmDelete)
-            {
-                <button type="button" class="btn btn-outline-danger" @onclick="() => confirmDelete = true">Удалить организацию</button>
-            }
-            else
-            {
-                <div class="alert alert-warning">
-                    <p class="mb-3">Подтвердите удаление организации.</p>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-danger" @onclick="DeleteAsync">Подтвердить удаление</button>
-                        <button type="button" class="btn btn-outline-secondary" @onclick="() => confirmDelete = false">Отмена</button>
-                    </div>
-                </div>
-            }
+            <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">Удалить организацию</button>
         </div>
     }
 }
@@ -107,7 +94,6 @@ else
     private Organization? organization;
     private bool canEditOrganizations;
     private bool canManageEmployees;
-    private bool confirmDelete;
     private string? errorMessage;
 
     protected override async Task OnParametersSetAsync()
@@ -131,7 +117,6 @@ else
         catch (Exception ex)
         {
             errorMessage = ex.Message;
-            confirmDelete = false;
         }
     }
 }

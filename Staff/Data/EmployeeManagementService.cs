@@ -7,16 +7,21 @@ public class EmployeeManagementService(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager)
 {
+    private const string GeneratedPassword = "Temp123!";
+
     public async Task<Employee> CreateAsync(EmployeeUpsertModel model, CancellationToken cancellationToken = default)
     {
+        var login = ResolveLogin(model);
+        var password = ResolvePassword(model);
+
         var user = new ApplicationUser
         {
-            UserName = model.Login,
-            Email = model.Login,
+            UserName = login,
+            Email = login,
             EmailConfirmed = true
         };
 
-        var createResult = await userManager.CreateAsync(user, model.Password!);
+        var createResult = await userManager.CreateAsync(user, password);
         EnsureSuccess(createResult);
 
         if (!string.IsNullOrWhiteSpace(model.RoleName))
@@ -68,15 +73,17 @@ public class EmployeeManagementService(
         employee.OrganizationId = model.OrganizationId;
         employee.PositionId = model.PositionId;
 
-        if (!string.Equals(employee.User.UserName, model.Login, StringComparison.OrdinalIgnoreCase))
+        var login = ResolveLogin(model, employee.User.Email ?? employee.User.UserName ?? string.Empty);
+
+        if (!string.Equals(employee.User.UserName, login, StringComparison.OrdinalIgnoreCase))
         {
-            var userNameResult = await userManager.SetUserNameAsync(employee.User, model.Login);
+            var userNameResult = await userManager.SetUserNameAsync(employee.User, login);
             EnsureSuccess(userNameResult);
         }
 
-        if (!string.Equals(employee.User.Email, model.Login, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(employee.User.Email, login, StringComparison.OrdinalIgnoreCase))
         {
-            var emailResult = await userManager.SetEmailAsync(employee.User, model.Login);
+            var emailResult = await userManager.SetEmailAsync(employee.User, login);
             EnsureSuccess(emailResult);
             employee.User.EmailConfirmed = true;
         }
@@ -138,4 +145,29 @@ public class EmployeeManagementService(
 
     private static string? NullIfEmpty(string? value) =>
         string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+    private static string ResolveLogin(EmployeeUpsertModel model, string? fallbackLogin = null)
+    {
+        if (!string.IsNullOrWhiteSpace(model.Login))
+        {
+            return model.Login.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(fallbackLogin))
+        {
+            return fallbackLogin;
+        }
+
+        return $"employee-{Guid.NewGuid():N}@local";
+    }
+
+    private static string ResolvePassword(EmployeeUpsertModel model)
+    {
+        if (!string.IsNullOrWhiteSpace(model.Password))
+        {
+            return model.Password;
+        }
+
+        return GeneratedPassword;
+    }
 }

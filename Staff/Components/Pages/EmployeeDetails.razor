@@ -48,9 +48,6 @@ else
                 <dt class="col-sm-3">Должность</dt>
                 <dd class="col-sm-9"><a href="@($"/positions/{employee.PositionId}")">@employee.Position.Name</a></dd>
 
-                <dt class="col-sm-3">Пользователь</dt>
-                <dd class="col-sm-9">@employee.User.Email</dd>
-
                 <dt class="col-sm-3">Роль</dt>
                 <dd class="col-sm-9">@GetRoleName(employee)</dd>
             </dl>
@@ -61,16 +58,7 @@ else
     {
         <div class="d-flex gap-2 flex-wrap">
             <a class="btn btn-outline-secondary" href="@($"/employees/{employee.Id}/edit")">Изменить</a>
-
-            @if (!confirmDelete)
-            {
-                <button type="button" class="btn btn-outline-danger" @onclick="() => confirmDelete = true">Удалить сотрудника</button>
-            }
-            else
-            {
-                <button type="button" class="btn btn-danger" @onclick="DeleteAsync">Подтвердить удаление</button>
-                <button type="button" class="btn btn-outline-secondary" @onclick="() => confirmDelete = false">Отмена</button>
-            }
+            <button type="button" class="btn btn-outline-danger" @onclick="DeleteAsync">Удалить сотрудника</button>
         </div>
     }
 }
@@ -81,7 +69,6 @@ else
 
     private Employee? employee;
     private bool canManageEmployees;
-    private bool confirmDelete;
     private string? errorMessage;
 
     protected override async Task OnParametersSetAsync()
@@ -104,7 +91,6 @@ else
         catch (Exception ex)
         {
             errorMessage = ex.Message;
-            confirmDelete = false;
         }
     }
 

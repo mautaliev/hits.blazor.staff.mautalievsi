@@ -43,7 +43,7 @@ else
             </div>
 
             <div class="col-md-6">
-                <label class="form-label" for="login">Логин (email)</label>
+                <label class="form-label" for="login">Логин (email, необязательно)</label>
                 <InputText id="login" class="form-control" @bind-Value="model.Login" />
             </div>
             <div class="col-md-6">
@@ -151,7 +151,7 @@ else
         if (!Id.HasValue)
         {
             pageTitle = "Создание сотрудника";
-            passwordLabel = "Пароль";
+            passwordLabel = "Пароль (необязательно)";
             cancelUrl = OrganizationId.HasValue ? $"/organizations/{OrganizationId.Value}" : "/";
 
             model = new EmployeeUpsertModel
@@ -172,7 +172,7 @@ else
         }
 
         pageTitle = "Редактирование сотрудника";
-        passwordLabel = "Новый пароль";
+        passwordLabel = "Новый пароль (необязательно)";
         cancelUrl = $"/employees/{employee.Id}";
         model = new EmployeeUpsertModel
         {
@@ -202,12 +202,6 @@ else
     {
         try
         {
-            if (!Id.HasValue && string.IsNullOrWhiteSpace(model.Password))
-            {
-                errorMessage = "Укажите пароль для нового сотрудника.";
-                return;
-            }
-
             if (!canManageRoles)
             {
                 model.RoleName = null;
