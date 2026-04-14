@@ -25,6 +25,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<Organization>(entity =>
         {
+            // ИНН должен быть уникальным, иначе организации легко задублировать.
             entity.HasIndex(x => x.Inn).IsUnique();
         });
 
@@ -39,6 +40,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             entity.HasIndex(x => x.Snils).IsUnique();
             entity.HasIndex(x => x.UserId).IsUnique();
 
+            // Restrict нужен, чтобы связанные данные не удалялись каскадом "случайно за компанию".
             entity.HasOne(x => x.Organization)
                 .WithMany(x => x.Employees)
                 .HasForeignKey(x => x.OrganizationId)
@@ -69,6 +71,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         });
 
         builder.Entity<Role>().HasData(
+            // Базовые роли сеем сразу, чтобы система стартовала уже в рабочем виде.
             new Role
             {
                 Id = "role-admin",

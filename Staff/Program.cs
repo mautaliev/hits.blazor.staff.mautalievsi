@@ -26,6 +26,7 @@ builder.Services.AddAuthentication(options =>
 
 var rawConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 var connectionStringBuilder = new SqliteConnectionStringBuilder(rawConnectionString);
+// Если путь к sqlite базе относительный, привязываем его к папке проекта.
 if (!Path.IsPathRooted(connectionStringBuilder.DataSource))
 {
     connectionStringBuilder.DataSource = Path.Combine(builder.Environment.ContentRootPath, connectionStringBuilder.DataSource);
@@ -59,9 +60,11 @@ var app = builder.Build();
 await using (var scope = app.Services.CreateAsyncScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    // На старте просто применяем миграции, чтобы схема БД не отставала.
     await dbContext.Database.MigrateAsync();
 }
 
+// Подкидываем роли и демо-данные, чтобы приложение сразу было чем открыть.
 await AppIdentitySeeder.SeedAsync(app.Services);
 await AppDemoDataSeeder.SeedAsync(app.Services);
 

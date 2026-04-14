@@ -65,6 +65,7 @@
     protected override void OnInitialized()
     {
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        // Следим за текущим адресом, чтобы после logout возвращать пользователя куда надо.
         NavigationManager.LocationChanged += OnLocationChanged;
     }
 

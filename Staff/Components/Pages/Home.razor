@@ -110,6 +110,7 @@ else
     protected override async Task OnParametersSetAsync()
     {
         organizations = await OrganizationFacade.GetAllAsync();
+        // Если id пришёл из query, открываем эту организацию, иначе просто первую.
         selectedOrganization = organizations
             .FirstOrDefault(x => x.Id == OrganizationId)
             ?? organizations.FirstOrDefault();
@@ -124,6 +125,7 @@ else
         }
 
         var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        // Права считаем один раз тут, чтобы потом просто управлять кнопками в разметке.
         canManageEmployees = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Hr);
         canOpenOrganizations = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Hr) || user.IsInRole(AppRoles.Lawyer);
     }
@@ -137,6 +139,7 @@ else
     private static string GetUserDisplay(Employee employee)
     {
         var email = employee.User.Email;
+        // Служебные local-логины в таблице смысла показывать нет.
         if (string.IsNullOrWhiteSpace(email) || email.EndsWith("@local", StringComparison.OrdinalIgnoreCase))
         {
             return "—";

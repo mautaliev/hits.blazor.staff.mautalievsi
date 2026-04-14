@@ -56,6 +56,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        // Кнопку создания показываем только тем, кому реально можно менять организации.
         canEditOrganizations = user.IsInRole(AppRoles.Admin) || user.IsInRole(AppRoles.Lawyer);
         organizations = await OrganizationFacade.GetAllAsync();
     }

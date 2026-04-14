@@ -7,6 +7,11 @@ public static class AppDemoDataSeeder
 {
     private const string DefaultUserPassword = "Demo123!";
 
+    /// <summary>
+    /// Заполняет базу демонстрационными организациями, должностями и сотрудниками.
+    /// </summary>
+    /// <param name="serviceProvider">Контейнер сервисов, из которого берутся DbContext и UserManager.</param>
+    /// <returns>Задача без значения результата.</returns>
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
@@ -14,11 +19,17 @@ public static class AppDemoDataSeeder
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
+        // Сначала справочники, потом сотрудники, потому что они на них завязаны.
         await SeedOrganizationsAsync(dbContext);
         await SeedPositionsAsync(dbContext);
         await SeedEmployeesAsync(dbContext, userManager);
     }
 
+    /// <summary>
+    /// Добавляет в базу демо-организации, если их там ещё нет.
+    /// </summary>
+    /// <param name="dbContext">Контекст базы данных.</param>
+    /// <returns>Задача без значения результата.</returns>
     private static async Task SeedOrganizationsAsync(ApplicationDbContext dbContext)
     {
         var organizations = new[]
@@ -48,6 +59,7 @@ public static class AppDemoDataSeeder
 
         foreach (var organization in organizations)
         {
+            // При повторном запуске просто пропускаем уже существующие записи.
             if (await dbContext.Organizations.AnyAsync(x => x.Name == organization.Name))
             {
                 continue;
@@ -59,6 +71,11 @@ public static class AppDemoDataSeeder
         await dbContext.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Добавляет в базу демо-должности, если они ещё не были созданы раньше.
+    /// </summary>
+    /// <param name="dbContext">Контекст базы данных.</param>
+    /// <returns>Задача без значения результата.</returns>
     private static async Task SeedPositionsAsync(ApplicationDbContext dbContext)
     {
         var positions = new[]
@@ -108,8 +125,15 @@ public static class AppDemoDataSeeder
         await dbContext.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Создаёт демонстрационных сотрудников и связанные с ними аккаунты пользователей.
+    /// </summary>
+    /// <param name="dbContext">Контекст базы данных.</param>
+    /// <param name="userManager">Менеджер пользователей Identity.</param>
+    /// <returns>Задача без значения результата.</returns>
     private static async Task SeedEmployeesAsync(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
     {
+        // Складываем в словари, чтобы потом быстро брать id по названию.
         var organizations = await dbContext.Organizations.ToDictionaryAsync(x => x.Name);
         var positions = await dbContext.Positions.ToDictionaryAsync(x => x.Name);
 
@@ -269,6 +293,7 @@ public static class AppDemoDataSeeder
             var createResult = await userManager.CreateAsync(user, DefaultUserPassword);
             EnsureSuccess(createResult, item.Email);
 
+            // Роль назначаем только там, где она реально указана в демо-наборе.
             if (!string.IsNullOrWhiteSpace(item.RoleName))
             {
                 var roleResult = await userManager.AddToRoleAsync(user, item.RoleName);
@@ -296,6 +321,12 @@ public static class AppDemoDataSeeder
         await dbContext.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Проверяет, успешно ли прошла операция создания пользователя или назначения роли.
+    /// </summary>
+    /// <param name="result">Результат операции Identity.</param>
+    /// <param name="email">Email пользователя, с которым была связана операция.</param>
+    /// <exception cref="InvalidOperationException">Выбрасывается, если операция завершилась с ошибками.</exception>
     private static void EnsureSuccess(IdentityResult result, string email)
     {
         if (result.Succeeded)
