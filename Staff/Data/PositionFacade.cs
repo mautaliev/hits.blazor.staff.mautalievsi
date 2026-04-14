@@ -31,10 +31,18 @@ public class PositionFacade(ApplicationDbContext dbContext)
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
-        var position = await dbContext.Positions.FindAsync([id], cancellationToken);
+        var position = await dbContext.Positions
+            .Include(x => x.Employees)
+            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
         if (position is null)
         {
             return;
+        }
+
+        if (position.Employees.Count > 0)
+        {
+            throw new InvalidOperationException("Нельзя удалить должность, пока на неё назначены сотрудники.");
         }
 
         dbContext.Positions.Remove(position);
